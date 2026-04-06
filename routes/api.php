@@ -16,3 +16,17 @@ Route::delete('cart/items/{product}', [CartController::class, 'destroy'])->where
 
 Route::post('checkout', [CheckoutController::class, 'store']);
 
+Route::get('setup-production', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'mysecretkey') return response()->json(['error' => 'Unauthorized'], 401);
+    
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    
+    return [
+        'status' => 'success',
+        'message' => 'Cache cleared and migrations ran successfully.',
+        'output' => \Illuminate\Support\Facades\Artisan::output()
+    ];
+});
+
