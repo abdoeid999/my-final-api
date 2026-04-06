@@ -20,6 +20,7 @@ class CartController extends Controller
 
         $items = $cart->items
             ->map(function (CartItem $item) {
+                if (!$item->product) return null;
                 return [
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
@@ -35,14 +36,18 @@ class CartController extends Controller
                     'line_total' => round((float) $item->product->price * $item->quantity, 2),
                 ];
             })
+            ->filter()
             ->values();
 
         $subtotal = $items->sum(fn($i) => (float) $i['line_total']);
 
         return response()->json([
-            'items' => $items,
-            'subtotal' => round((float) $subtotal, 2),
-            'currency' => 'USD',
+            'status' => 'success',
+            'data' => [
+                'items' => $items,
+                'subtotal' => round((float) $subtotal, 2),
+                'currency' => 'USD',
+            ]
         ]);
     }
 
@@ -50,7 +55,6 @@ class CartController extends Controller
     {
         $cart = $this->getOrCreateCart($request);
 
-        /** @var Product $product */
         $product = Product::findOrFail($request->integer('product_id'));
 
         $quantityToAdd = $request->integer('quantity');
@@ -59,6 +63,7 @@ class CartController extends Controller
 
         if ($newQuantity > $product->stock) {
             return response()->json([
+                'status' => 'error',
                 'message' => 'Not enough stock for this quantity.',
             ], 422);
         }
@@ -76,12 +81,14 @@ class CartController extends Controller
         return $this->index($request);
     }
 
-    public function update(Product $product, UpdateCartItemRequest $request): JsonResponse
+    public function update($productId, UpdateCartItemRequest $request): JsonResponse
     {
         $cart = $this->getOrCreateCart($request);
+        $product = Product::findOrFail($productId);
 
         if ($request->integer('quantity') > $product->stock) {
             return response()->json([
+                'status' => 'error',
                 'message' => 'Not enough stock for this quantity.',
             ], 422);
         }
@@ -100,11 +107,10 @@ class CartController extends Controller
         return $this->index($request);
     }
 
-    public function destroy(Product $product, Request $request): JsonResponse
+    public function destroy($productId, Request $request): JsonResponse
     {
         $cart = $this->getOrCreateCart($request);
-
-        $cart->items()->where('product_id', $product->id)->delete();
+        $cart->items()->where('product_id', $productId)->delete();
 
         return $this->index($request);
     }

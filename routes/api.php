@@ -6,7 +6,8 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 
 Route::get('products', [ProductController::class, 'index']);
-Route::get('products/{product}', [ProductController::class, 'show'])->whereNumber('product');
+Route::get('products/categories', [ProductController::class, 'categories']);
+Route::get('products/{id}', [ProductController::class, 'show']);
 
 Route::get('cart', [CartController::class, 'index']);
 Route::post('cart/items', [CartController::class, 'store']);

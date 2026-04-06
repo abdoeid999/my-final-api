@@ -75,10 +75,13 @@ class CheckoutController extends Controller
         });
 
         return response()->json([
-            'order_id' => $order->id,
-            'order_number' => $order->order_number,
-            'message' => 'Order placed successfully!',
-            'total' => (float) $order->total,
+            'status' => 'success',
+            'data' => [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'message' => 'Order placed successfully!',
+                'total' => (float) $order->total,
+            ]
         ]);
     }
 
