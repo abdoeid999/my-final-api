@@ -30,3 +30,18 @@ Route::get('setup-production', function (\Illuminate\Http\Request $request) {
     ];
 });
 
+Route::get('logs-production', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'mysecretkey') return response()->json(['error' => 'Unauthorized'], 401);
+    
+    $path = storage_path('logs/laravel.log');
+    if (file_exists($path)) {
+        // Return last 2000 chars
+        $content = file_get_contents($path);
+        return [
+            'status' => 'success',
+            'log' => substr($content, -3000)
+        ];
+    }
+    return ['status' => 'error', 'message' => 'No log file found'];
+});
+
